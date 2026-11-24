@@ -1,7 +1,13 @@
 package frc.robot.Motor;
 
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.DutyCycleOut;
+import com.ctre.phoenix6.controls.DynamicMotionMagicVoltage;
+import com.ctre.phoenix6.controls.MotionMagicVelocityVoltage;
+import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.PositionVoltage;
+import com.ctre.phoenix6.controls.TorqueCurrentFOC;
+import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -12,8 +18,17 @@ public final class CTREMotor implements Motor {
     private final TalonFX m_motor;
 
     private final VoltageOut m_voRequest = new VoltageOut(0.0);
+    private final DutyCycleOut m_dcRequest = new DutyCycleOut(0.0);
+
     private final PositionVoltage m_pvRequest = new PositionVoltage(0.0);
     private final VelocityVoltage m_vvRequest = new VelocityVoltage(0.0);
+
+    private final VelocityTorqueCurrentFOC m_vtcRequest = new VelocityTorqueCurrentFOC(0.0);
+    private final TorqueCurrentFOC m_tcRequest = new TorqueCurrentFOC(0.0);
+
+    private final MotionMagicVoltage m_mmRequest = new MotionMagicVoltage(0.0);
+    private final MotionMagicVelocityVoltage m_mmvvRequest = new MotionMagicVelocityVoltage(0.0);
+    private final DynamicMotionMagicVoltage m_dmmRequest = new DynamicMotionMagicVoltage(0.0, 0.0, 0.0);
 
     public static CTREMotor talonFX(int CanID, MotorConfig config) {
         return new CTREMotor(CanID, config);
@@ -24,12 +39,14 @@ public final class CTREMotor implements Motor {
         TalonFXConfiguration m_config = buildTalonConfig(config);
         m_motor.getConfigurator().apply(m_config);
     }
-    
+
     private static TalonFXConfiguration buildTalonConfig(MotorConfig config) {
         TalonFXConfiguration m_config = new TalonFXConfiguration();
 
-        m_config.MotorOutput.Inverted = config.isInverted() ? InvertedValue.Clockwise_Positive : InvertedValue.CounterClockwise_Positive;
-        m_config.MotorOutput.NeutralMode = config.getIdleMode() == MotorConfig.IdleMode.kBrake ? NeutralModeValue.Brake : NeutralModeValue.Coast;
+        m_config.MotorOutput.Inverted = config.isInverted() ? InvertedValue.Clockwise_Positive
+                : InvertedValue.CounterClockwise_Positive;
+        m_config.MotorOutput.NeutralMode = config.getIdleMode() == MotorConfig.IdleMode.kBrake ? NeutralModeValue.Brake
+                : NeutralModeValue.Coast;
 
         MotorConfig.Gains gains = config.getGains();
 
@@ -49,18 +66,40 @@ public final class CTREMotor implements Motor {
     }
 
     @Override
+    public void setDutyCycle(double output) {
+        m_motor.setControl(m_dcRequest.withOutput(output));
+    }
+
+    @Override
     public void setVoltage(double volts) {
         m_motor.setControl(m_voRequest.withOutput(volts));
     }
 
     @Override
-    public void setPosition(double position) {
-        m_motor.setControl(m_pvRequest.withPosition(position));
+    public void setPosition(double position, boolean FOCEnabled, boolean MotionMagicEnabled) {
+        m_motor.setControl(MotionMagicEnabled ? m_mmRequest.withPosition(position).withEnableFOC(FOCEnabled)
+                                                : m_pvRequest.withPosition(position).withEnableFOC(FOCEnabled));
     }
 
     @Override
-    public void setVelocity(double velocity) {
-        m_motor.setControl(m_vvRequest.withVelocity(velocity));
+    public void setVelocity(double velocity, boolean FOCEnabled, boolean MotionMagicEnabled) {
+        m_motor.setControl(MotionMagicEnabled ? m_mmvvRequest.withVelocity(velocity).withEnableFOC(FOCEnabled)
+                                                : m_vvRequest.withVelocity(velocity).withEnableFOC(FOCEnabled));
+    }
+
+    @Override
+    public void setDynanmicMotionMagic(double velocity, double position, double acceleration) {
+        m_motor.setControl(m_dmmRequest.withVelocity(velocity).withPosition(position).withAcceleration(acceleration));
+    }
+
+    @Override
+    public void setTorqueCurrent(double stator) {
+        m_motor.setControl(m_tcRequest.withOutput(stator));
+    }
+
+    @Override
+    public void setVelocityTorqueCurrent(double velocity) {
+        m_motor.setControl(m_vtcRequest.withVelocity(velocity));
     }
 
     @Override

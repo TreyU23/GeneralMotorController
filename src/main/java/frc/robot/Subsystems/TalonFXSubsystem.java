@@ -12,11 +12,11 @@ public class TalonFXSubsystem extends SubsystemBase {
     }
 
     public Command setVelocityCmd(double velocity) {
-        return runEnd(()-> m_motor.setVelocity(velocity), ()-> m_motor.stop());
+        return runEnd(()-> m_motor.setVelocity(velocity, false, false), ()-> m_motor.stop());
     }
 
     public Command setPositionCmd(double position) {
-        return runEnd(()-> m_motor.setPosition(position), ()-> m_motor.stop());
+        return runEnd(()-> m_motor.setPosition(position, false, false), ()-> m_motor.stop());
     }
 
     public Command setVoltageCmd(double volts) {
