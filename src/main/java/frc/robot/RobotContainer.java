@@ -35,7 +35,7 @@ public class RobotContainer {
     return Commands.print("No autonomous command configured");
   }
 
-  private static final MotorConfig m_config = new MotorConfig(false, IdleMode.kCoast, Gains.pid(1.0, 0, 0), SoftLimits.both(10, 0));
+  private static final MotorConfig m_config = new MotorConfig(false, IdleMode.kCoast, Gains.pid(1.0, 0, 0), SoftLimits.both(10, 0), MotionMagic.none());
 
   private static Motor createMotor(int CanID, MotorConfig config, Vendor vendor) {
     if (vendor == Vendor.CTRE) return CTREMotor.talonFX(CanID, config);

@@ -44,9 +44,9 @@ public final class CTREMotor implements Motor {
         TalonFXConfiguration m_config = new TalonFXConfiguration();
 
         m_config.MotorOutput.Inverted = config.isInverted() ? InvertedValue.Clockwise_Positive
-                : InvertedValue.CounterClockwise_Positive;
+                                                            : InvertedValue.CounterClockwise_Positive;
         m_config.MotorOutput.NeutralMode = config.getIdleMode() == MotorConfig.IdleMode.kBrake ? NeutralModeValue.Brake
-                : NeutralModeValue.Coast;
+                                                                                                : NeutralModeValue.Coast;
 
         MotorConfig.Gains gains = config.getGains();
 
@@ -55,12 +55,25 @@ public final class CTREMotor implements Motor {
         m_config.Slot0.kD = gains.kD();
         m_config.Slot0.kS = gains.kS();
         m_config.Slot0.kV = gains.kV();
+        m_config.Slot0.kG = gains.kG();
 
-        m_config.SoftwareLimitSwitch.ForwardSoftLimitThreshold = config.getSoftLimits().forward();
-        m_config.SoftwareLimitSwitch.ReverseSoftLimitThreshold = config.getSoftLimits().reverse();
+        if (!Double.isNaN(config.getSoftLimits().forward())) {
+            m_config.SoftwareLimitSwitch.ForwardSoftLimitThreshold = config.getSoftLimits().forward();
+            m_config.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
+        } else {
+            m_config.SoftwareLimitSwitch.ForwardSoftLimitEnable = false;
+        }
 
-        m_config.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
-        m_config.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
+        if (!Double.isNaN(config.getSoftLimits().reverse())) {
+            m_config.SoftwareLimitSwitch.ReverseSoftLimitThreshold = config.getSoftLimits().reverse();
+            m_config.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
+        } else {
+            m_config.SoftwareLimitSwitch.ReverseSoftLimitEnable = false;
+        }
+
+        m_config.MotionMagic.MotionMagicCruiseVelocity = config.getMotionMagic().velocity();
+        m_config.MotionMagic.MotionMagicAcceleration = config.getMotionMagic().acceleration();
+        m_config.MotionMagic.MotionMagicJerk = config.getMotionMagic().jerk();
 
         return m_config;
     }
